@@ -10,3 +10,5 @@ Refactoring Muduo Network Library with C++
    ```bash
    chmod +x autobuild.sh
    ```
+
+2. **If you want to run the test program, modify the IP address in the test file inside the `example` folder, then run `make` in the `example` directory to build and test.**
