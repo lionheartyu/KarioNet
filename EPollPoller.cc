@@ -16,6 +16,7 @@ const int kAdded = 1;
 const int kDeleted = 2;
 
 // 构造函数，创建epoll实例和初始化事件列表
+const int kInitEventListSize = 16; // 确保大于0
 EPollPoller::EPollPoller(EventLoop *loop)
     : Poller(loop),
       epollfd_(::epoll_create1(EPOLL_CLOEXEC)),
@@ -51,7 +52,7 @@ Timestamp EPollPoller::poll(int timeoutMs, ChannelList *activeChannels)
     {
         LOG_INFO("%d events happened\n", numEvents);
         fillActiveChannel(numEvents, activeChannels); // 填充活跃通道
-        if (numEvents = events_.size()) // 如果事件数量等于当前容量，则扩容
+        if (numEvents == static_cast<int>(events_.size()))
         {
             events_.resize(events_.size() * 2);
         }
