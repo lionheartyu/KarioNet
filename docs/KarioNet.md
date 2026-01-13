@@ -63,6 +63,16 @@
 
 # 2.核心理念
 
+* **水平触发和边缘触发**
+* **共同点:**
+* 水平触发(LT)和边缘触发(ET)都是epoll支持的事件通知机制，用于检测文件描述符fd的可读可写等状态的变化,都是实现高效的I/O多路复用的。
+* **不同点:**
+* 水平触发只要缓冲区有数据未处理，每次epoll_wait都会通知，直到数据被处理完。事件通知的次数多，系统调用频繁，适合一般场景。
+* 边缘触发只要状态发生变化时才会通知，只会通知一次，后续不会重复通知。通知次数少，减少系统调用，适合高性能场景。
+
+* **什么是同步非阻塞IO**
+* 同步非阻塞IO是指发起IO操作时不会阻塞线程，但需要主动轮询IO状态来获取结果。
+
 * MIO 网络库的核心理念 **“one loop per thread”** 的意思是：
 
 * > **每个线程只运行一个事件循环（EventLoop），每个事件循环只属于一个线程。**
@@ -180,4 +190,3 @@ MIO网络库
 ```
 
 这里值得一提的是main Reactor也有一个EventLoop 只是其Loop循环的事件是等待连接也就是当Accept触发，那么EventLoop::Loop监听的Poller中epoll_wait就会被唤醒，然后EventLoop把相应的Channel执行其回调事件。这里的回调主要是TcpServer在Accept定义好的newconnection事件，用来初始化Tcpconnection对象的。这个时候就是我们的subReactor也就是我们会通过轮询算法给Tcpconnection对象分配EventLoop对象，此时这个EventLoop对应的就是一个线程，这就是MIO库重要思想**one loop per thread**。
-
