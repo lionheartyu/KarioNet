@@ -73,7 +73,7 @@
 * **什么是同步非阻塞IO**
 * 同步非阻塞IO是指发起IO操作时不会阻塞线程，但需要主动轮询IO状态来获取结果。
 
-* MIO 网络库的核心理念 **“one loop per thread”** 的意思是：
+* KarioNet 网络库的核心理念 **“one loop per thread”** 的意思是：
 
 * > **每个线程只运行一个事件循环（EventLoop），每个事件循环只属于一个线程。**
 
@@ -117,7 +117,7 @@ void EventLoopThread::threadFunc()
 - EventHandler：事件处理器
 - handler 就是“处理某个事件的代码”。
 
-在MIO中，其调用关系大致如下
+在KarioNet中，其调用关系大致如下
 
 - 将事件及其处理方法注册到reactor，**reactor中存储了连接套接字connfd以及其感兴趣的事件event**
 - reactor向其所对应的**demultiplex去注册相应的connfd+事件**，启动反应堆
@@ -152,7 +152,7 @@ Event
                                                                                           └─> EventHandler
 ```
 
-* 而上述的，是在一个reactor反应堆中所执行的大致流程，其在MIO代码中包含关系如下（椭圆圈起来的是类）：
+* 而上述的，是在一个reactor反应堆中所执行的大致流程，其在KarioNet代码中包含关系如下（椭圆圈起来的是类）：
 
 * 可以看到，**EventLoop其实就是我们的subreactor**，其执行在一个**Thread**上，实现了**one loop per thread**的设计。
 
@@ -173,12 +173,12 @@ Thread
                                  └── wakeup_fd
 ```
 
-* 现在，我们大致明白了MIO每个reactor的设计，但是作为一个支持高并发的网络库，单线程往往不是一个好的设计。
+* 现在，我们大致明白了KarioNet每个reactor的设计，但是作为一个支持高并发的网络库，单线程往往不是一个好的设计。
 
-* MIO采用了和Nginx相似的操作，有一个main reactor通过accept组件负责处理新的客户端连接，并将它们分派给各个sub reactor，每个sub reactor则是负责一个连接的读写等工作。
+* KarioNet采用了和Nginx相似的操作，有一个main reactor通过accept组件负责处理新的客户端连接，并将它们分派给各个sub reactor，每个sub reactor则是负责一个连接的读写等工作。
 
 ```bash
-MIO网络库
+KarioNet网络库
    │
    └─> main reactor
            │
@@ -189,4 +189,4 @@ MIO网络库
                            └─> 每个 sub reactor 负责一个连接的读写等工作
 ```
 
-这里值得一提的是main Reactor也有一个EventLoop 只是其Loop循环的事件是等待连接也就是当Accept触发，那么EventLoop::Loop监听的Poller中epoll_wait就会被唤醒，然后EventLoop把相应的Channel执行其回调事件。这里的回调主要是TcpServer在Accept定义好的newconnection事件，用来初始化Tcpconnection对象的。这个时候就是我们的subReactor也就是我们会通过轮询算法给Tcpconnection对象分配EventLoop对象，此时这个EventLoop对应的就是一个线程，这就是MIO库重要思想**one loop per thread**。
+这里值得一提的是main Reactor也有一个EventLoop 只是其Loop循环的事件是等待连接也就是当Accept触发，那么EventLoop::Loop监听的Poller中epoll_wait就会被唤醒，然后EventLoop把相应的Channel执行其回调事件。这里的回调主要是TcpServer在Accept定义好的newconnection事件，用来初始化Tcpconnection对象的。这个时候就是我们的subReactor也就是我们会通过轮询算法给Tcpconnection对象分配EventLoop对象，此时这个EventLoop对应的就是一个线程，这就是KarioNet库重要思想**one loop per thread**。
